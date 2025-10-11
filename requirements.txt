@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+python-dotenv
+loguru
+openai
+torch
+transformers
+pydantic
+nest_asyncio
