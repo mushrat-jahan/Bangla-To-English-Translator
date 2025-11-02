@@ -1,20 +1,16 @@
-<<<<<<< HEAD
-from groq import Groq
-from pydantic import BaseModel, Field
-from dotenv import load_dotenv
 import os
-
-load_dotenv()
-api_key = os.getenv("GROQ_API_KEY")
-=======
+from dotenv import load_dotenv
+from fastapi.middleware.cors import CORSMiddleware
+from loguru import logger
+import openai
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
 from pydantic import BaseModel, Field
-from unsloth import FastLanguageModel
-# from Gemma2ForCausalLM import Gemma2ForCausalLM
+import nest_asyncio
+from fastapi import FastAPI, HTTPException
+from typing import Dict, Any
+import uvicorn
 
-
->>>>>>> abfe091e5233a6f97e4ddfba35cf1710f1de9fa6
 # -----------------------------
 # Request schema
 # -----------------------------
@@ -23,16 +19,7 @@ class TranslationRequest(BaseModel):
     target_language: str = Field(..., description="Target language for translation")
 
 # -----------------------------
-<<<<<<< HEAD
-# Groq client setup
-# -----------------------------
-client = Groq(api_key=api_key)
-
-# -----------------------------
-# System prompt
-=======
 # Prompts
->>>>>>> abfe091e5233a6f97e4ddfba35cf1710f1de9fa6
 # -----------------------------
 system_prompt = """You are a professional translator.
 Translate the Bengali text provided by the user into English.
@@ -41,10 +28,6 @@ Requirements:
 When the user provides Bengali text, respond only with the English translation.
 """
 
-<<<<<<< HEAD
-
-model_name = "openai/gpt-oss-20b"
-=======
 # -----------------------------
 # Model setup
 # -----------------------------
@@ -69,49 +52,14 @@ model = AutoModelForCausalLM.from_pretrained(
 )
 
 
-
 model.eval()
 
 device = next(model.parameters()).device
 
->>>>>>> abfe091e5233a6f97e4ddfba35cf1710f1de9fa6
 # -----------------------------
 # Translation function
 # -----------------------------
 def translate_bangla_to_english(text: str) -> str:
-<<<<<<< HEAD
-    try:
-        prompt = f"System: {system_prompt}\nUser: {text}\nAssistant:"
-
-        # Call Groq API
-        completion = client.chat.completions.create(
-            model=model_name,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": text}
-            ],
-            temperature=0.3,
-            max_tokens=512
-        )
-
-        # Extract translation result
-        if completion.choices and completion.choices[0].message:
-            translation = completion.choices[0].message.content.strip()
-        else:
-            translation = "Error: No translation returned."
-
-        # Clean translation if it contains extra newlines
-        if "\n" in translation:
-            translation = translation.split("\n")[0]
-
-        return translation
-
-    except Exception as e:
-        return f"Translation failed: {str(e)}"
-
-
-
-=======
     prompt = f"System: {system_prompt}\nUser: {text}\nAssistant:"
 
     inputs = tokenizer(prompt, return_tensors="pt").to(device)
@@ -141,14 +89,81 @@ def translate_bangla_to_english(text: str) -> str:
 # -----------------------------
 # Test run
 # -----------------------------
->>>>>>> abfe091e5233a6f97e4ddfba35cf1710f1de9fa6
 # if __name__ == "__main__":
 #     test_text = "জমিয়তে উলামায়ে ইসলাম বাংলাদেশ হলো বাংলাদেশের একটি ইসলামপন্থী রাজনৈতিক দল"
 #     print(translate_bangla_to_english(test_text))
 
 
 
-<<<<<<< HEAD
+load_dotenv()
+
+api_key = os.getenv("api_key")
+if not api_key:
+    raise ValueError("OPENAI_API_KEY not found in environment variables. Please check your .env file.")
+
+# Set OpenAI API key
+openai.api_key = api_key
+
+logger.info("API key set")  
+
+
+app = FastAPI(
+    title="Bangla to English Translator API",
+    description="API for translating Bangla text to English with accurate output",
+)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+class TextRequest(BaseModel):
+    text: str
+
+@app.get("/")
+def read_root():
+    return {"message": "Wellcome to the translator",
+            "status": "active",
+            "endpoints": {
+                "/translate": "POST - Translate Bangla text to English",
+                "/docs": "GET - API documentation"
+            }
+            
+            }
+
+
+@app.post("/translate", response_model=Dict[str, Any])
+async def text_translate(req: TranslationRequest):
+    try:
+        if not req.text.strip():
+            translated_text = translate_bangla_to_english(req.text)
+            raise HTTPException(status_code=400, detail="Text cannot be empty")
+
+        
+        return {
+            "translation": translated_text,
+            # "original_text": req.text,
+            "status": "success"
+        }
+    except Exception as e:
+        print(f"Error during translation: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Translation failed: {str(e)}")
+
+
+# -----------------------------
+# Run server
+# -----------------------------
+if __name__ == "__main__":
+    # print("\n" + "="*50)
+    print("Starting Bangla to English Translator API")
+    print("="*50)
+    print("Server will run on: http://localhost:8000")
+    print("API Documentation: http://localhost:8000/docs")
+    print("="*50 + "\n")
+    
+    uvicorn.run(app, host="0.0.0.0", port=8000)
 
 
 
@@ -156,23 +171,3 @@ def translate_bangla_to_english(text: str) -> str:
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-=======
->>>>>>> abfe091e5233a6f97e4ddfba35cf1710f1de9fa6

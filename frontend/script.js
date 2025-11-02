@@ -1,6 +1,11 @@
 
+<<<<<<< HEAD
         const apiUrl = "http://127.0.0.1:8000"; 
         // const apiUrl = "api_key";
+=======
+        // const apiUrl = "http://127.0.0.1:8000"; 
+        const apiUrl = "api_key";
+>>>>>>> abfe091e5233a6f97e4ddfba35cf1710f1de9fa6
         const inputText = document.getElementById('inputText');
         const outputText = document.getElementById('outputText');
         const translateBtn = document.getElementById('translateBtn');
